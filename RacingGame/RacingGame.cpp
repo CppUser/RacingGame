@@ -1,28 +1,34 @@
 #include <SFML\Graphics.hpp>
 
+//Temporary namespace to avoid typing sf::
+using namespace sf;
+
 int main() {
 
-	sf::Vector2f viewSize(1024, 768);
+	//Making video mode object with window size indication
+	VideoMode vmScreenSize(1280, 760);
+	//Create window for game
+	RenderWindow window(vmScreenSize, "Racing Game!", Style::Default);
 
-	sf::VideoMode vm(viewSize.x, viewSize.y);
-
-	sf::RenderWindow window(vm,"Racing Game", sf::Style::Default);
-	sf::RectangleShape rect(sf::Vector2f(500.0f, 300.0f));   rect.setFillColor(sf::Color::Yellow);   rect.setPosition(viewSize.x / 2, viewSize.y / 2);   rect.setOrigin(sf::Vector2f(rect.getSize().x / 2, rect.getSize().y / 2));
-
+	//Game Loop
 	while (window.isOpen())
 	{
-
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+		//////////////// Handling  Input Section////////////////////
+		
+		//Handling Event for Window Closing
+		if (Keyboard::isKeyPressed(Keyboard::Escape))
 		{
 			window.close();
 		}
 
-		window.clear(sf::Color::Red);
+		//////////////// Scence Update Section////////////////////
 
-		window.draw(rect);
-		//Render Game objects
-		window.display();
+
+		//////////////// Drawing on Screen Section////////////////////
+
 	}
+
+	
 	return 0;
 
 }
