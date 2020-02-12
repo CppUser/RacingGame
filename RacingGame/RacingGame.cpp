@@ -27,10 +27,58 @@ int main() {
 	//Positioning Sprite in window to be scaled full screen(0,0)
 	//TODO: Set Position of the Sprite to see the road
 	backgroundSprite.setPosition(0, 0);
+	backgroundSprite.setScale(1, 0.698);
+	
+	/*
+	    *****Road******
+	*/
+	//Placeholder for Road textures in GPU 
+	Texture roadTexture;
+	//Place Holder for roadTexture Sprite
+	Sprite roadSprite;
+
+	//Loading Texture Images from file
+	roadTexture.loadFromFile("resources/Sprites/Road/RoadClassicDark.png");
+	//Attaching texture to the sprite
+	roadSprite.setTexture(roadTexture);
+	//Positioning Sprite in window to be scaled full screen(0,0)
+	//TODO: Set Position of the Sprite to see the road
+	roadSprite.setPosition(0,700);
+	
+	
+	/*
+	    *****Cars******
+	*/
+
+	//TODO: Polish Player Car Better
+	//Placeholder for Car textures in GPU
+	Texture playerCarTexture;
+	//Place Holder for carTexture Sprite
+	Sprite playerCarSprite;
+
+	//Loading Texture Images from file
+	playerCarTexture.loadFromFile("resources/Sprites/Cars/Audi.png");
+	//Attaching texture to the sprite
+	playerCarSprite.setTexture(playerCarTexture);
+	//Positioning Sprite in window to be scaled full screen(0,0)
+	//TODO: Set Position of the Sprite to see the road
+	playerCarSprite.setPosition(40,800);
+	//Scaling Sprite to make car little bit smaller
+	playerCarSprite.setScale(0.8,0.8);
 	
 
 
-	//Game Loop
+
+	//TODO:Add More Cars
+
+
+
+
+	/*
+	**************************
+	  Game Loop
+	**************************	
+	*/
 	while (window.isOpen())
 	{
 		//////////////// Handling  Input Section////////////////////
@@ -52,6 +100,8 @@ int main() {
 
 		//Draing Game Assets
 		window.draw(backgroundSprite);
+		window.draw(roadSprite);
+		window.draw(playerCarSprite);
 
 		//Displaying everithing that have been drawn in buffer
 		window.display();
