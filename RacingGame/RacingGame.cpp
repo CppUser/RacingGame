@@ -25,7 +25,6 @@ int main() {
 	//Attaching texture to the sprite
 	backgroundSprite.setTexture(backgroundTexture);
 	//Positioning Sprite in window to be scaled full screen(0,0)
-	//TODO: Set Position of the Sprite to see the road
 	backgroundSprite.setPosition(0, 0);
 	backgroundSprite.setScale(1, 0.698);
 	
@@ -43,6 +42,7 @@ int main() {
 	roadSprite.setTexture(roadTexture);
 	//Positioning Sprite in window to be scaled full screen(0,0)
 	//TODO: Set Position of the Sprite to see the road
+	//TODO: Set Median Line (Moving on Player Acceleration
 	roadSprite.setPosition(0,700);
 	
 	
@@ -65,6 +65,12 @@ int main() {
 	playerCarSprite.setPosition(40,800);
 	//Scaling Sprite to make car little bit smaller
 	playerCarSprite.setScale(0.8,0.8);
+
+	//Attributes for Player Car
+	//Does the player car moce ?
+	bool plCarActive = false;
+	//How fast does player car move?
+	float plCarSpeed = 0.0f;
 	
 
 
