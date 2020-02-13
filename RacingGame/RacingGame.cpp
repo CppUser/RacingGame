@@ -1,8 +1,19 @@
 #include <SFML\Graphics.hpp>
+#include<SFML\Audio.hpp>
 #include <sstream>
 
 //Temporary namespace to avoid typing sf::
 using namespace sf;
+
+//Ongoing traffic function
+void updateTraffic(int objects);
+
+const int NUM_CARS = 8;
+Sprite trafficSprite[NUM_CARS];
+
+//Enum for player vehicle control
+enum class side { TOP, MIDDLE, BOTTOM, NONE };
+side trafficPosition[NUM_CARS];
 
 int main() {
 	//Making video mode object with window size indication
@@ -41,7 +52,6 @@ int main() {
 	//Attaching texture to the sprite
 	roadSprite.setTexture(roadTexture);
 	//Positioning Sprite in window to be scaled full screen(0,0)
-	//TODO: Set Position of the Sprite to see the road
 	//TODO: Set Median Line (Moving on Player Acceleration
 	roadSprite.setPosition(0, 700);
 
@@ -70,7 +80,8 @@ int main() {
 	bool plCarActive = false;
 	//How fast does player car move?
 	float plCarSpeed = 0.0f;
-
+	//Indicating on which side player starts
+	side playerCarSide = side::BOTTOM;
 	//TODO:Add More Cars for player to choose
 
 	//TODO:Add Multiple Opstical cars to avoid while driving
@@ -93,13 +104,12 @@ int main() {
 	//Tracker for game state
 	bool paused = true;
 
-
 	//**************Declaring and Positioning HUD Section*************//
 	int score = 0;
 	int distance = 0;
 
 	Text displayMessage;
-	Text scoreText,distanceText;
+	Text scoreText, distanceText;
 
 	//Setting up Text and Fonts
 	Font font;
@@ -132,6 +142,49 @@ int main() {
 	scoreText.setPosition(20, 20);
 	distanceText.setPosition(1500, 20);
 
+	//************Traffic Preporation Section***************//
+	Texture trafficTexutre;
+	trafficTexutre.loadFromFile("resources/Sprites/Cars/fer1.png");
+
+	//TODO: For Multiple obsticalse and HUD for choosing cars use this method
+	//Set texture for each traffic Sprite
+	for (int i = 0; i < NUM_CARS; i++)
+	{
+		trafficSprite[i].setTexture(trafficTexutre);
+		trafficSprite[i].setPosition(1500, 625);
+
+		//setting sprites origin to center of the texture size
+		//To change direction of the traffic without adding additional sprite for different direction
+		trafficSprite[i].setOrigin(200, 100);
+	}
+
+	//***** Player Input Handling Declaration Section *******//
+	bool acceptInput = false;
+
+	//******************SOUND and MUSIC SECTION***********//
+	//TODO: Add Sound Effects and Music to game(sound effect for honk car on close calls)
+	//TODO: Add Sound Effect for each car
+	//TODO: Add Driving car Sound Effect and Turn wheel effect
+	//Preparing the sound
+	//Player Car Shound
+	SoundBuffer drivingCarSound;
+	//drivingCarSound.loadFromFile("resources/soundEffects/drivingCarEffect.wav");
+	Sound driving;
+	driving.setBuffer(drivingCarSound);
+
+	//Player Car Turning Sound
+	SoundBuffer turningCarEffect;
+	//turningCarEffect.loadFromFile("resources/soundEffects/turningCarEffect.wav");
+	Sound turnEffect;
+	turnEffect.setBuffer(turningCarEffect);
+
+	//Player Car Crash Sound
+	SoundBuffer crashedCarEffect;
+	//crashedCarEffect.loadFromFile("resources/soundEffects/crashedCarEffect.wav");
+	Sound crashEffect;
+	crashEffect.setBuffer(crashedCarEffect);
+
+
 	/*
 	**************************
 	  Game Loop
@@ -140,6 +193,16 @@ int main() {
 	while (window.isOpen())
 	{
 		//////////////// Handling  Input Section////////////////////
+		//Applying event system
+		Event event;
+		while (window.pollEvent(event))
+		{
+			if (event.type == Event::KeyReleased && !paused)
+			{
+				//Listen for key press again
+				acceptInput = true;
+			}
+		}
 
 		//Handling Event for Window Closing
 		if (Keyboard::isKeyPressed(Keyboard::Escape))
@@ -149,54 +212,206 @@ int main() {
 		if (Keyboard::isKeyPressed(Keyboard::Enter))
 		{
 			paused = false;
+			score = 0;
+			distance = 0;
+
+			//Clear screen from traffic and start over again in same position
+			for (int i = 1; i < NUM_CARS; i++)
+			{
+				trafficPosition[i] = side::NONE;
+			}
+
+			//Move Player into position
+			playerCarSprite.setPosition(40, 800);
+			acceptInput = true;
+		}
+		//Wrapping up player input control 
+		//TODO: Fix Issue of handling input (Car is skipping middle line)
+		if (acceptInput)
+		{
+			//Handling pressing to right arrow
+			if (Keyboard::isKeyPressed(Keyboard::Right))
+			{
+				//Find in which position player is
+				if (playerCarSide == side::TOP)
+				{
+					
+					playerCarSide = side::MIDDLE;
+					playerCarSprite.setPosition(40, 700);
+					//TODO:Add turning sound effect
+					turnEffect.play();
+				}
+				 else if (playerCarSide == side ::MIDDLE)
+				{
+					playerCarSide = side::BOTTOM;
+					playerCarSprite.setPosition(40, 800);
+					//TODO:Add turning sound effect
+					turnEffect.play();
+				}
+				 else
+				{
+					playerCarSide = side::BOTTOM;
+					playerCarSprite.setPosition(40, 800);
+					turnEffect.play();
+					acceptInput = false;
+				}
+				//updateTraffic(score);
+			}
+			if (Keyboard::isKeyPressed(Keyboard::Left))
+			{
+				//Find in which position player is
+				if (playerCarSide == side::BOTTOM)
+				{
+					playerCarSide = side::MIDDLE;
+					playerCarSprite.setPosition(40, 700);
+					//TODO:Add turning sound effect
+					turnEffect.play();
+				}
+				else if (playerCarSide == side::MIDDLE)
+				{
+					playerCarSide = side::TOP;
+					playerCarSprite.setPosition(40, 600);
+					//acceptInput = false;
+					//TODO:Add turning sound effect
+					turnEffect.play();
+				}
+				else
+				{
+					playerCarSide = side::TOP;
+					playerCarSprite.setPosition(40, 600);
+					acceptInput = false;
+					//TODO:Add turning sound effect
+					turnEffect.play();
+				}
+				//updateTraffic(score);
+			}
 		}
 
 		//////////////// Scence Update Section////////////////////
 
 		if (!paused)
 		{
+			//TODO:Add driving sound effect
+			driving.play();
 			//Measuring time(clock.restart - restarts the time)
 			Time dt = clock.restart();
 
 			//***************** DECORATION ANIMATION SECTION *****************//
-			//Setting up obsticals
+
+			////TODO: Compare Random Generating vs Enum specified location
 			if (!obsActive)
 			{
-				//Randomly generate speed for obsticals
-				srand((int)time(0));
-				obsSpeed = (rand() % 200) + 600;
-
-				srand((int)time(0));
-				//Generate random number between 625 to 724
-				float height = (rand() % 100) + 625;
-				obsSprite.setPosition(2000, height);
+				//Generatinc Trafic in scence
+				for (int i = 0; i < NUM_CARS; i++)
+				{
+					float lenght = i * 150;
+					//Setting up Random Speed For Traffic
+					srand((int)time(0));
+					obsSpeed = (rand() % 200) + 600;
+					if (trafficPosition[i] == side::TOP)
+					{
+						//Move the traffic sprites to the left side
+						trafficSprite[i].setPosition(1500 - lenght, 625);
+						//Rotate Sprite 180 degree
+						//trafficSprite[i].setRotation(180);
+						
+					}
+					else if (trafficPosition[i] == side::MIDDLE)
+					{
+						trafficSprite[i].setPosition(1500 - lenght, 725);
+					}
+					else if (trafficPosition[i] == side::BOTTOM)
+					{
+						trafficSprite[i].setPosition(1500 - lenght, 825);
+					}
+					else
+					{
+						//HIDE THE Traffic
+						trafficSprite[i].setPosition(2500, lenght);
+					}
+				}
 				obsActive = true;
 			}
+			//Move the traffic
 			else
-				//Moving obs toward player
 			{
-				obsSprite.setPosition(obsSprite.getPosition().x - (obsSpeed * dt.asSeconds()), obsSprite.getPosition().y);
-
-				//Check if obsSpite reached left hand edge of the screen
-				if (obsSprite.getPosition().x < -600)
-				{
-					//Reset obstical for next frame
-					obsActive = false;
+				for (int i = 0; i < NUM_CARS; i++) {
+					if (trafficPosition[i] == side::TOP)
+					{
+						trafficSprite[i].setPosition(trafficSprite[i].getPosition().x - (obsSpeed * dt.asSeconds()), trafficSprite[i].getPosition().y);
+					}
+					else if (trafficPosition[i] == side::MIDDLE)
+					{
+						trafficSprite[i].setPosition(trafficSprite[i].getPosition().x - (obsSpeed * dt.asSeconds()), trafficSprite[i].getPosition().y);
+					}
+					else if (trafficPosition[i] == side::BOTTOM)
+					{
+						trafficSprite[i].setPosition(trafficSprite[i].getPosition().x - (obsSpeed * dt.asSeconds()), trafficSprite[i].getPosition().y);
+					}
 				}
 			}
+
+			////Setting up obsticals
+			//if (!obsActive)
+			//{
+			//	////Randomly generate speed for obsticals
+			//	//srand((int)time(0));
+			//	//obsSpeed = (rand() % 200) + 600;
+
+			//	//srand((int)time(0));
+			//	////Generate random number between 625 to 724
+			//	//float height = (rand() % 100) + 625;
+			//	//obsSprite.setPosition(2000, height);
+			//	obsActive = true;
+			//}
+			//else
+			//	//Moving obs toward player
+			//{
+			//	obsSprite.setPosition(obsSprite.getPosition().x - (obsSpeed * dt.asSeconds()), obsSprite.getPosition().y);
+
+			//	//Check if obsSpite reached left hand edge of the screen
+			//	if (obsSprite.getPosition().x < -600)
+			//	{
+			//		//Reset obstical for next frame
+			//		obsActive = false;
+			//	}
+			//}
 			//TODO: Animate rest of the resources
 
 			//TODO: Temporary location for updating score text
 			//Update the score text
-			std::stringstream ss,ds;
+			std::stringstream ss, ds;
 			ss << "Score = " << score;
 			ds << "Distance = " << distance;
 			scoreText.setString(ss.str());
 			distanceText.setString(ds.str());
-
 			
-		}// End of Tracking game state 
+			//TODO: Polish Collision Detecting and fix minor bugs
+			//Handling Collision Detection (Crash)
+			if (trafficPosition[5] == playerCarSide)
+			{
+				//Crash
+				paused = true;
+				acceptInput = false;
+				//TODO: ADD Sprite of  crashed car and display it
+				//crashedCarSprite.setPosition(Position of the crash);
+				//hide normal car sprite
+				// playerCarSprite.setPosition(out of screen)
+				
+				//Changing text on HUD screen
+				displayMessage.setString("Crashed!!!");
 
+				//Positioning text on middle screen
+				FloatRect textRect = displayMessage.getLocalBounds();
+				displayMessage.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+				displayMessage.setPosition(1920 / 2.0f, 670);
+
+				//TODO:Add Crash sound effect
+				crashEffect.play();
+				
+			}
+
+		}// End of Tracking game state
 
 		//////////////// Drawing on Screen Section/////////////////
 
@@ -209,7 +424,16 @@ int main() {
 		window.draw(roadSprite);
 		/* //TODO: Set Condition for obstical sprite and Player Sprite to draw them in order which sprite is higher in pixel dence
 		to give them look */
-		window.draw(obsSprite);
+
+		//TODO:Test static obstical vs random
+		//Random drawing for obsticals traffic
+		//window.draw(obsSprite);
+		//Static drawing for obstical Traffic
+		for (int i = 0; i < NUM_CARS; i++)
+		{
+			window.draw(trafficSprite[i]);
+		}
+
 		window.draw(playerCarSprite);
 
 		//Draw the score
@@ -227,4 +451,34 @@ int main() {
 	}
 
 	return 0;
+}
+
+void updateTraffic(int objects)
+{
+	//Move traffic sprites down one position
+	for (int i = NUM_CARS - 1; i > 0; i--)
+	{
+		trafficPosition[i] = trafficPosition[i - 1];
+	}
+
+	//Spawn New trafficSprites at position 0
+	srand((int)time(0) + objects);
+	int r = (rand() % 5);
+	switch (r)
+	{
+	case 0:
+		trafficPosition[0] = side::TOP;
+		break;
+	case 1:
+		trafficPosition[0] = side::MIDDLE;
+		break;
+	case 2:
+		trafficPosition[0] = side::BOTTOM;
+		break;
+
+	default:
+		trafficPosition[0] = side::NONE;
+
+		break;
+	}
 }
